@@ -3,23 +3,25 @@ import { BookOpen, CalendarDays, Bell } from "lucide-react";
 import { PageHeader } from "@/components/ui/feedback";
 import { StatCard } from "@/components/stat-card";
 import { apiGet, apiGetOrNull } from "@/lib/server";
-import type { Me, Notification, Paginated, Period } from "@/lib/types";
+import type { Enrollment, Me, Notification, Paginated, Period } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Inicio" };
 
 const fmt = (iso: string) => new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 export default async function StudentHome() {
-  const [me, period, active, notifications] = await Promise.all([
+  const [me, period, enrollments, notifications] = await Promise.all([
     apiGet<Me>("/users/me"),
     apiGetOrNull<Period>("/periods/current"),
-    apiGetOrNull<Paginated<unknown>>("/enrollments/mine?limit=1"),
+    apiGetOrNull<Paginated<Enrollment>>("/enrollments/mine?limit=100"),
     apiGetOrNull<Paginated<Notification> & { unread: number }>("/notifications/mine?limit=1"),
   ]);
+  // Solo cuentan las matriculas en curso del periodo abierto (no las historicas ni las canceladas)
+  const active = enrollments?.data.filter((e) => e.status === "activa" && e.period.status === "abierto").length ?? 0;
 
   return (
     <>
-      <PageHeader title={`Hola, ${me.name.split(" ")[1]}`} subtitle="Este es el resumen de tu periodo académico." />
+      <PageHeader title={`Hola, ${me.name.split(" ")[0]}`} subtitle="Este es el resumen de tu periodo académico." />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
@@ -28,7 +30,7 @@ export default async function StudentHome() {
           value={period ? period.code : "—"}
           hint={period ? `${fmt(period.startDate)} – ${fmt(period.endDate)}` : "No hay un periodo abierto"}
         />
-        <StatCard icon={BookOpen} label="Materias matriculadas" value={active?.meta.total ?? 0} hint="Matrículas activas este periodo" />
+        <StatCard icon={BookOpen} label="Materias matriculadas" value={active} hint="Matrículas activas este periodo" />
         <StatCard icon={Bell} label="Notificaciones sin leer" value={notifications?.unread ?? 0} />
       </div>
 

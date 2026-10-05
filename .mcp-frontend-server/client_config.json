@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "frontend-qa": {
+      "command": "node",
+      "args": [
+        "/Users/julio20veloz/Documents/AI development/1P/frontend_examen1/.mcp-frontend-server/dist/index.js"
+      ]
+    }
+  }
+}

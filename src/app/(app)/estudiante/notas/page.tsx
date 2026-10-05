@@ -37,8 +37,9 @@ export default async function GradesPage() {
             const evaluations = plans[i].data;
             const rows = evaluations.map((ev) => ({ ev, value: myGrades.get(`${e._id}:${ev._id}`) }));
             const graded = rows.filter((r) => r.value !== undefined);
-            const points = graded.length > 0 ? graded.reduce((sum, r) => sum + (r.value ?? 0), 0) / graded.length : 0;
-            const evaluated = rows.reduce((sum, r) => sum + (r.value !== undefined ? r.ev.weight : 0), 0);
+            const evaluated = graded.reduce((sum, r) => sum + r.ev.weight, 0);
+            // Promedio ponderado por el peso de cada evaluacion (igual que la planilla del docente)
+            const points = evaluated > 0 ? graded.reduce((sum, r) => sum + (r.value ?? 0) * r.ev.weight, 0) / evaluated : 0;
 
             return (
               <Card key={e._id} className="p-5">
@@ -70,7 +71,7 @@ export default async function GradesPage() {
                         <tr key={ev._id} className="border-b border-line/60 last:border-0">
                           <td className="py-2.5 font-medium">{ev.name}</td>
                           <td className="py-2.5 text-right text-muted">{ev.weight}%</td>
-                          <td className={cn("py-2.5 text-right font-bold", value === undefined ? "text-muted" : value <= PASSING ? "text-danger-600" : "text-success-600")}>
+                          <td className={cn("py-2.5 text-right font-bold", value === undefined ? "text-muted" : value < PASSING ? "text-danger-600" : "text-success-600")}>
                             {value === undefined ? "Pendiente" : grade(value)}
                           </td>
                         </tr>

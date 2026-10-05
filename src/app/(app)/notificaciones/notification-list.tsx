@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Award, BookCheck, BookX, CheckCheck, Megaphone, Presentation, type LucideIcon } from "lucide-react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, NOTIFICATIONS_CHANGED } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import type { Notification, Paginated } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ export function NotificationList() {
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [result, setResult] = useState<Page | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -44,15 +45,20 @@ export function NotificationList() {
     void load();
   }, [load]);
 
-  async function markRead(id: string) {
-    await api(`/notifications/${id}/read`, { method: "PATCH" }).catch(() => undefined);
+  // Marca como leidas, avisa al menu para que actualice su contador y muestra el error si falla
+  async function mark(path: string) {
+    setActionError(null);
+    try {
+      await api(path, { method: "PATCH" });
+      window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED));
+    } catch (e) {
+      setActionError(e instanceof ApiError ? e.message : "No se pudo marcar como leída");
+    }
     void load();
   }
 
-  async function markAll() {
-    await api("/notifications/read-all", { method: "PATCH" }).catch(() => undefined);
-    void load();
-  }
+  const markRead = (id: string) => mark(`/notifications/${id}/read`);
+  const markAll = () => mark("/notifications/read-all");
 
   if (error) return <Alert>{error}</Alert>;
   if (!result) return <p className="text-sm text-muted">Cargando…</p>;
@@ -85,6 +91,12 @@ export function NotificationList() {
           <CheckCheck className="size-4" aria-hidden /> Marcar todas como leídas
         </Button>
       </div>
+
+      {actionError && (
+        <div className="mb-4">
+          <Alert>{actionError}</Alert>
+        </div>
+      )}
 
       {result.data.length === 0 ? (
         <EmptyState title={unreadOnly ? "No tienes notificaciones sin leer" : "Aún no tienes notificaciones"} />

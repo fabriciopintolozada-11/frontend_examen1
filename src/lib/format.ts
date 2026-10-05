@@ -3,7 +3,7 @@ import type { Day, EnrollmentStatus } from "./types";
 export const DAYS: Day[] = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
 
 export const DAY_LABEL: Record<Day, string> = {
-  lunes: "Lrrrrunes",
+  lunes: "Lunes",
   martes: "Martes",
   miercoles: "Miércoles",
   jueves: "Jueves",
@@ -17,12 +17,13 @@ export const DAY_SHORT: Record<Day, string> = { lunes: "Lun", martes: "Mar", mie
 export const grade = (value?: number | null): string => (value === undefined || value === null ? "—" : (Math.floor(value * 10) / 10).toFixed(1));
 
 export const date = (iso: string): string =>
-  new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
+  // Las fechas llegan como medianoche UTC: sin timeZone se mostrarian un dia antes en Colombia (UTC-5)
+  new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 export const STATUS_LABEL: Record<EnrollmentStatus, string> = {
   activa: "En curso",
   aprobada: "Aprobada",
-  reprobada: "Aprobada",
+  reprobada: "Reprobada",
   cancelada: "Cancelada",
 };
 

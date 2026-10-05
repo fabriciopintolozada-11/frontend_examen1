@@ -16,7 +16,6 @@ export function AccountForms({ name, email, roleLabel }: { name: string; email: 
   const router = useRouter();
 
   const [newName, setNewName] = useState(name);
-  const [dirty, setDirty] = useState(false);
   const [nameNotice, setNameNotice] = useState<Notice>(null);
   const [savingName, setSavingName] = useState(false);
 
@@ -78,7 +77,7 @@ export function AccountForms({ name, email, roleLabel }: { name: string; email: 
           {nameNotice && <Alert tone={nameNotice.tone}>{nameNotice.text}</Alert>}
           <Field label="Nombre completo" name="name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
           <Field label="Correo" name="email" value={email} disabled hint="El correo solo lo puede cambiar un administrador." />
-          <Button type="submit" loading={savingName} disabled={!dirty || !newName.trim() || newName.trim() === name}>
+          <Button type="submit" loading={savingName} disabled={!newName.trim() || newName.trim() === name}>
             Guardar nombre
           </Button>
         </form>

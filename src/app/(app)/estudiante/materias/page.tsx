@@ -19,7 +19,7 @@ export default async function MyEnrollmentsPage() {
     if (!byPeriod.has(e.period.code)) byPeriod.set(e.period.code, { status: e.period.status, items: [] });
     byPeriod.get(e.period.code)!.items.push(e);
   }
-  const periods = [...byPeriod.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const periods = [...byPeriod.entries()].sort(([a], [b]) => b.localeCompare(a));
 
   return (
     <>

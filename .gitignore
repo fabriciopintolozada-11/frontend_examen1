@@ -41,6 +41,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# cookie jars de curl: contienen tokens de sesion reales, nunca se versionan
+a.txt
+s.txt
+*.cookies.txt
+cookies*.txt
+
 # AI tooling (skills, MCPs, agent instructions) - not part of the project code
 .claude/
 .agents/

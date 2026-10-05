@@ -18,7 +18,8 @@ export async function POST(request: NextRequest) {
 
   const data = await res.json().catch(() => null);
   if (!res.ok || !data?.accessToken) {
-    return NextResponse.json({ message: data?.message ?? "No se pudo iniciar sesion" }, { status: res.status });
+    // Una respuesta 2xx sin token no es un login valido: no debe llegar al navegador como exito
+    return NextResponse.json({ message: data?.message ?? "No se pudo iniciar sesion" }, { status: res.ok ? 502 : res.status });
   }
 
   const session = decodeToken(data.accessToken);

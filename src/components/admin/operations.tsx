@@ -4,7 +4,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Ban, Lock, Play, Search, Send, type LucideIcon } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
-import { date, DAY_SHORT, STATUS_LABEL, STATUS_TONE } from "@/lib/format";
+import { date, DAY_SHORT, grade, STATUS_LABEL, STATUS_TONE } from "@/lib/format";
 import type { Paginated } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -325,7 +325,7 @@ const enrollments: ResourceConfig = {
       ),
     },
     { header: "Periodo", cell: (r) => r.period?.code },
-    { header: "Nota final", align: "right", cell: (r) => (r.finalGrade !== undefined ? r.finalGrade.toFixed(1) : "—") },
+    { header: "Nota final", align: "right", cell: (r) => grade(r.finalGrade) },
     { header: "Estado", cell: (r) => <Badge tone={STATUS_TONE[r.status as keyof typeof STATUS_TONE]}>{STATUS_LABEL[r.status as keyof typeof STATUS_LABEL]}</Badge> },
   ],
   fields: [
@@ -377,12 +377,17 @@ export function SendNotice() {
       setHits([]);
       return;
     }
+    // alive evita que una busqueda vieja que responde tarde pise los resultados de la actual
+    let alive = true;
     const t = setTimeout(() => {
       api<Paginated<UserHit>>(`/users?q=${encodeURIComponent(search.trim())}&active=true&limit=6`)
-        .then((r) => setHits(r.data))
-        .catch(() => setHits([]));
+        .then((r) => alive && setHits(r.data))
+        .catch(() => alive && setHits([]));
     }, 300);
-    return () => clearTimeout(t);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
   }, [search]);
 
   async function send(event: FormEvent) {

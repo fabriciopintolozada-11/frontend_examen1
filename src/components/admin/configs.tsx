@@ -13,6 +13,8 @@ import { ACTIVE_OPTIONS, ActiveBadge, ResourceManager, type Opt, type ResourceCo
 
 const text = (v: unknown) => String(v ?? "").trim();
 const optional = (v: unknown) => (text(v) === "" ? undefined : text(v));
+// Al editar, un campo opcional vaciado se envia como null para borrarlo (undefined desaparece del JSON)
+const clearable = (v: unknown, mode: "create" | "edit") => optional(v) ?? (mode === "edit" ? null : undefined);
 const id = (ref: any): string => (ref ? String(ref._id ?? ref) : "");
 
 const ROLES: Opt[] = [
@@ -51,7 +53,7 @@ const faculties: ResourceConfig = {
     { name: "active", label: "Facultad activa", type: "checkbox", mode: "edit" },
   ],
   initial: (r) => ({ code: r?.code ?? "", name: r?.name ?? "", campus: r?.campus ?? "", email: r?.email ?? "", active: r?.active ?? true }),
-  toBody: (v, mode) => ({ code: text(v.code), name: text(v.name), campus: text(v.campus), email: optional(v.email), ...(mode === "edit" ? { active: v.active === true } : {}) }),
+  toBody: (v, mode) => ({ code: text(v.code), name: text(v.name), campus: text(v.campus), email: clearable(v.email, mode), ...(mode === "edit" ? { active: v.active === true } : {}) }),
 };
 
 /* ---------------- Programas ---------------- */
@@ -136,7 +138,7 @@ const subjects: ResourceConfig = {
     name: text(v.name),
     credits: Number(v.credits),
     program: text(v.program),
-    semester: optional(v.semester) ? Number(v.semester) : undefined,
+    semester: optional(v.semester) ? Number(v.semester) : mode === "edit" ? null : undefined,
     prerequisites: v.prerequisites as string[],
     ...(mode === "edit" ? { active: v.active === true } : {}),
   }),

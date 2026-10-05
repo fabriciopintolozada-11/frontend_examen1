@@ -63,6 +63,16 @@ export interface ResourceConfig {
 const PAGE_SIZE = 15;
 const message = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);
 
+// Trae todas las paginas de un listado (las listas de opciones no deben cortarse en la primera pagina)
+async function fetchAll(endpoint: string): Promise<any[]> {
+  const sep = endpoint.includes("?") ? "&" : "?";
+  const first = await api<Paginated<any>>(`${endpoint}${sep}page=1`);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, first.meta.totalPages - 1) }, (_, i) => api<Paginated<any>>(`${endpoint}${sep}page=${i + 2}`)),
+  );
+  return [first, ...rest].flatMap((r) => r.data);
+}
+
 export const ACTIVE_OPTIONS: Opt[] = [
   { value: "true", label: "Activos" },
   { value: "false", label: "Inactivos" },
@@ -80,9 +90,9 @@ export function ResourceManager({ config }: { config: ResourceConfig }) {
   const [notice, setNotice] = useState<string | null>(null);
   const dirty = useRef(false);
 
-  // Cierra el formulario, salvo que el recurso pida conservar los cambios sin guardar
+  // Cierra el formulario; si el recurso pide conservar los cambios sin guardar, confirma antes de descartarlos
   const closeForm = () => {
-    if (config.keepOpenIfDirty && form?.mode === "edit" && dirty.current) return;
+    if (config.keepOpenIfDirty && form?.mode === "edit" && dirty.current && !window.confirm("Hay cambios sin guardar. ¿Quieres descartarlos?")) return;
     dirty.current = false;
     setForm(null);
   };
@@ -100,8 +110,8 @@ export function ResourceManager({ config }: { config: ResourceConfig }) {
   useEffect(() => {
     let alive = true;
     Object.entries(config.lookups ?? {}).forEach(([key, def]) => {
-      api<Paginated<any>>(def.endpoint)
-        .then((r) => alive && setLookups((l) => ({ ...l, [key]: r.data.map((x) => ({ value: x._id, label: def.label(x) })) })))
+      fetchAll(def.endpoint)
+        .then((rows) => alive && setLookups((l) => ({ ...l, [key]: rows.map((x) => ({ value: x._id, label: def.label(x) })) })))
         .catch(() => undefined);
     });
     return () => {
@@ -112,7 +122,7 @@ export function ResourceManager({ config }: { config: ResourceConfig }) {
   const load = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
     if (config.search && query) params.set(config.search.param, query);
-    if (page === 1) Object.entries(filters).forEach(([k, v]) => v && params.set(k, v));
+    Object.entries(filters).forEach(([k, v]) => v && params.set(k, v));
     try {
       setData(await api<Paginated<any>>(`${config.endpoint}?${params}`));
       setError(null);
@@ -294,7 +304,7 @@ function RecordForm({
 
   // Avisa al contenedor si el formulario tiene cambios respecto al registro original
   useEffect(() => {
-    onDirty(JSON.stringify(values) !== JSON.stringify(row ?? config.initial(null)));
+    onDirty(JSON.stringify(values) !== JSON.stringify(config.initial(row)));
   }, [values, row, config, onDirty]);
   const [dynamic, setDynamic] = useState<Record<string, Opt[]>>({});
   const [error, setError] = useState<string | null>(null);
@@ -314,8 +324,8 @@ function RecordForm({
         setDynamic((d) => ({ ...d, [f.name]: [] }));
         return;
       }
-      api<Paginated<any>>(url)
-        .then((r) => alive && setDynamic((d) => ({ ...d, [f.name]: r.data.filter((x) => x._id !== row?._id).map((x) => ({ value: x._id, label: f.optionsFrom!.label(x) })) })))
+      fetchAll(url)
+        .then((rows) => alive && setDynamic((d) => ({ ...d, [f.name]: rows.filter((x) => x._id !== row?._id).map((x) => ({ value: x._id, label: f.optionsFrom!.label(x) })) })))
         .catch(() => undefined);
     });
     return () => {
@@ -445,10 +455,10 @@ function ScheduleEditor({ label, hint, slots, classrooms, onChange }: { label: s
       {hint && <p className="text-xs text-muted">{hint}</p>}
       {slots.map((s, i) => (
         <div key={i} className="grid grid-cols-2 items-end gap-2 rounded-xl border border-line p-3 sm:grid-cols-[1fr_6.5rem_6.5rem_1fr_auto]">
-          <Select label="Día" options={DAY_OPTIONS} value={s.day} onChange={(e) => update(i, { day: e.target.value })} />
-          <Field label="Inicio" type="time" value={s.startTime} onChange={(e) => update(i, { startTime: e.target.value })} />
-          <Field label="Fin" type="time" value={s.endTime} onChange={(e) => update(i, { endTime: e.target.value })} />
-          <Select label="Salón" placeholder="Salón" options={classrooms} value={s.classroom} onChange={(e) => update(i, { classroom: e.target.value })} />
+          <Select id={`slot-${i}-day`} label="Día" options={DAY_OPTIONS} value={s.day} onChange={(e) => update(i, { day: e.target.value })} />
+          <Field id={`slot-${i}-start`} label="Inicio" type="time" value={s.startTime} onChange={(e) => update(i, { startTime: e.target.value })} />
+          <Field id={`slot-${i}-end`} label="Fin" type="time" value={s.endTime} onChange={(e) => update(i, { endTime: e.target.value })} />
+          <Select id={`slot-${i}-classroom`} label="Salón" placeholder="Salón" options={classrooms} value={s.classroom} onChange={(e) => update(i, { classroom: e.target.value })} />
           <button type="button" onClick={() => onChange(slots.filter((_, j) => j !== i))} aria-label={`Quitar franja ${i + 1}`} className="col-span-2 flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-danger-600 hover:bg-danger-100 sm:col-span-1 sm:w-11">
             <Trash2 className="size-4" aria-hidden />
           </button>

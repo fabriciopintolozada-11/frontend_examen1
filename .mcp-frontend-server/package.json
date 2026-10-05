@@ -1,0 +1,26 @@
+{
+  "name": "frontend-qa-mcp",
+  "version": "1.0.0",
+  "description": "Servidor MCP para auditar, diagnosticar y corregir el frontend que lo contiene.",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "frontend-qa-mcp": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -28,7 +28,8 @@ export async function api<T>(path: string, { method = "GET", body }: Options = {
     throw new ApiError(0, "No hay conexion con el servidor");
   }
 
-  if (res.status === 401) {
+  // En /auth/* un 401 significa credenciales incorrectas (login, cambio de contrasena), no sesion vencida
+  if (res.status === 401 && !path.startsWith("/auth/")) {
     // Navegacion completa a proposito: descarta todo el estado del navegador al vencer la sesion
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/login?expired=1";
@@ -42,5 +43,8 @@ export async function api<T>(path: string, { method = "GET", body }: Options = {
   }
   return data as T;
 }
+
+// Evento del navegador para que el menu recargue el contador de notificaciones sin leer
+export const NOTIFICATIONS_CHANGED = "notifications:changed";
 
 export type { Paginated } from "./types";
