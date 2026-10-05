@@ -13,13 +13,13 @@ export default async function StudentHome() {
   const [me, period, active, notifications] = await Promise.all([
     apiGet<Me>("/users/me"),
     apiGetOrNull<Period>("/periods/current"),
-    apiGetOrNull<Paginated<unknown>>("/enrollments/mine?limit=1"),
+    apiGetOrNull<Paginated<unknown>>("/enrollments/mine?status=activa&limit=1"),
     apiGetOrNull<Paginated<Notification> & { unread: number }>("/notifications/mine?limit=1"),
   ]);
 
   return (
     <>
-      <PageHeader title={`Hola, ${me.name.split(" ")[1]}`} subtitle="Este es el resumen de tu periodo académico." />
+      <PageHeader title={`Hola, ${me.name.split(" ")[0]}`} subtitle="Este es el resumen de tu periodo académico." />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard

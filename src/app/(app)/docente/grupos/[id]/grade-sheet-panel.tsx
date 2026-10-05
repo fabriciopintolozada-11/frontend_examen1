@@ -16,7 +16,7 @@ const message = (e: unknown, fallback: string) => (e instanceof ApiError ? e.mes
 
 // Nota valida: 0 a 5, maximo 2 decimales (acepta coma o punto)
 const parse = (text: string): number | null => {
-  const t = text.trim();
+  const t = text.trim().replace(",", ".");
   if (!/^\d(\.\d{1,2})?$/.test(t)) return null;
   const n = Number(t);
   return n >= 0 && n <= 5 ? n : null;

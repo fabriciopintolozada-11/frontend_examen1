@@ -112,7 +112,7 @@ export function ResourceManager({ config }: { config: ResourceConfig }) {
   const load = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
     if (config.search && query) params.set(config.search.param, query);
-    if (page === 1) Object.entries(filters).forEach(([k, v]) => v && params.set(k, v));
+    Object.entries(filters).forEach(([k, v]) => v && params.set(k, v));
     try {
       setData(await api<Paginated<any>>(`${config.endpoint}?${params}`));
       setError(null);
@@ -184,7 +184,7 @@ export function ResourceManager({ config }: { config: ResourceConfig }) {
           <EmptyState title={config.empty} text="Prueba cambiando los filtros o crea un registro nuevo." />
         ) : (
           <Card className="overflow-hidden p-0">
-            <div>
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[40rem] text-sm">
                 <thead>
                   <tr className="border-b border-line text-left text-xs text-muted">
@@ -294,7 +294,7 @@ function RecordForm({
 
   // Avisa al contenedor si el formulario tiene cambios respecto al registro original
   useEffect(() => {
-    onDirty(JSON.stringify(values) !== JSON.stringify(row ?? config.initial(null)));
+    onDirty(JSON.stringify(values) !== JSON.stringify(config.initial(row)));
   }, [values, row, config, onDirty]);
   const [dynamic, setDynamic] = useState<Record<string, Opt[]>>({});
   const [error, setError] = useState<string | null>(null);

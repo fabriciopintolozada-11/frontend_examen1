@@ -47,7 +47,7 @@ export function EnrollView() {
     setBusy(g.group);
     setNotice(null);
     try {
-      await api("/enrollments", { method: "POST", body: { group: g.group } });
+      await api("/enrollments", { method: "POST", body: { groupId: g.group } });
       setNotice({ tone: "success", text: `Quedaste matriculado en ${g.subject.name} (grupo ${g.number}).` });
       await load();
     } catch (e) {

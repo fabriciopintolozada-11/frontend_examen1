@@ -333,7 +333,7 @@ const enrollments: ResourceConfig = {
     { name: "group", label: "Grupo", type: "select", lookup: "openGroup", required: true, hint: "Solo grupos activos con cupo. El backend valida prerrequisitos, cruces de horario y el límite de créditos." },
   ],
   initial: () => ({ student: "", group: "" }),
-  toBody: (v) => ({ student: text(v.student), group: text(v.group) }),
+  toBody: (v) => ({ student: text(v.student), groupId: text(v.group) }),
   rowActions: (r, reload) =>
     r.status === "activa" && r.period?.status === "abierto" ? (
       <ConfirmAction
@@ -343,7 +343,7 @@ const enrollments: ResourceConfig = {
         title="Cancelar matrícula"
         description={`Se cancelará la matrícula de ${r.student?.user?.name} en ${r.subject?.name} y se liberará el cupo.`}
         confirmLabel="Cancelar matrícula"
-        run={() => api(`/enrollments/${r._id}/cancel`, { method: "PATCH" })}
+        run={() => api(`/enrollments/${r._id}/cancel`, { method: "POST" })}
         onDone={reload}
       />
     ) : null,

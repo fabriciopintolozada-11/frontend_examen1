@@ -91,7 +91,7 @@ export function NotificationList() {
       ) : (
         <ul className="divide-y divide-line overflow-hidden rounded-(--radius-card) border border-line bg-surface shadow-(--shadow-card)">
           {result.data.map((n) => {
-            const { icon: Icon, label } = TYPE[n.type];
+            const { icon: Icon, label } = TYPE[n.type] ?? TYPE.aviso;
             return (
               <li key={n._id} className={cn("flex items-start gap-4 p-4 sm:p-5", !n.read && "bg-primary-50/60")}>
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-700">

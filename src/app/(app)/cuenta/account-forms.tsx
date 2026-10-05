@@ -76,7 +76,10 @@ export function AccountForms({ name, email, roleLabel }: { name: string; email: 
         </div>
         <form onSubmit={saveName} className="space-y-4" noValidate>
           {nameNotice && <Alert tone={nameNotice.tone}>{nameNotice.text}</Alert>}
-          <Field label="Nombre completo" name="name" value={newName} onChange={(e) => setNewName(e.target.value)} required />
+          <Field label="Nombre completo" name="name" value={newName} onChange={(e) => {
+              setNewName(e.target.value);
+              setDirty(true);
+            }} required />
           <Field label="Correo" name="email" value={email} disabled hint="El correo solo lo puede cambiar un administrador." />
           <Button type="submit" loading={savingName} disabled={!dirty || !newName.trim() || newName.trim() === name}>
             Guardar nombre
